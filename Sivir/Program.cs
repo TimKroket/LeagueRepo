@@ -37,6 +37,10 @@ namespace Sivir
 
         //Menu
         public static Menu Config;
+        
+        //AutoLeveler 
+        public static int[] abilitySequence;
+        public static int qOff = 0, wOff = 0, eOff = 0, rOff = 0;
 
         private static Obj_AI_Hero Player;
 
@@ -48,7 +52,8 @@ namespace Sivir
         {
             Player = ObjectManager.Player;
             if (Player.BaseSkinName != ChampionName) return;
-
+            //SpellOrder
+            abilitySequence = new int[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
             //Create the spells
             Q = new Spell(SpellSlot.Q, 1240f);
             Qc = new Spell(SpellSlot.Q, 1200f);
@@ -89,6 +94,8 @@ namespace Sivir
                 Config.SubMenu("E Shield Config").AddItem(new MenuItem("Edmg", "E dmg % hp").SetValue(new Slider(0, 100, 0))); 
             #endregion
             Config.AddItem(new MenuItem("pots", "Use pots").SetValue(true));
+             //TimKroket Adds
+            Config.AddItem(new MenuItem("timKroket1", "AutoLevelUp").SetValue(true));
 
             //Add the events we are going to use:
             Game.OnUpdate += Game_OnGameUpdate;
@@ -96,7 +103,7 @@ namespace Sivir
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Game.PrintChat("<font color=\"#9c3232\">S</font>ivir full automatic AI ver 1.9 <font color=\"#000000\">by sebastiank1</font> - <font color=\"#00BFFF\">Loaded</font>");
-
+            Game.PrintChat("<font color=\"#36ff00\">Forked</font> <font color=\"#000000\">by</font> <font color=\"#1394d6\">TimKroket</font>")
         }
 
         public static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -155,6 +162,7 @@ namespace Sivir
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            if (Config.Item("timKroket1").GetValue<bool>())LevelUpSpells();
             ManaMenager();
             PotionMenager();
             if (Q.IsReady())
@@ -297,6 +305,29 @@ namespace Sivir
                 QMANA = 0;
                 WMANA = 0;
                 RMANA = 0;
+            }
+        }
+        
+        
+        //TimKroket
+        private static void LevelUpSpells()
+        {
+            int qL = Player.Spellbook.GetSpell(SpellSlot.Q).Level + qOff;
+            int wL = Player.Spellbook.GetSpell(SpellSlot.W).Level + wOff;
+            int eL = Player.Spellbook.GetSpell(SpellSlot.E).Level + eOff;
+            int rL = Player.Spellbook.GetSpell(SpellSlot.R).Level + rOff;
+            if (qL + wL + eL + rL < ObjectManager.Player.Level)
+            {
+                int[] level = new int[] { 0, 0, 0, 0 };
+                for (int i = 0; i < ObjectManager.Player.Level; i++)
+                {
+                    level[abilitySequence[i] - 1] = level[abilitySequence[i] - 1] + 1;
+                }
+                if (qL < level[0]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                if (wL < level[1]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                if (eL < level[2]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                if (rL < level[3]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+
             }
         }
         public static void PotionMenager()
